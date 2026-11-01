@@ -79,6 +79,15 @@ const markWatched = async (userId, titleId, { rating = null, targetId = null, ke
     return previous;
 };
 
+// For other modules that imply a viewing (reviews): same side effects, no feed item of its own.
+const markWatchedForTitle = async (userId, titleId, { rating } = {}) => {
+    if (rating) {
+        await repository.setRating(userId, titleId, rating);
+    }
+    await markWatched(userId, titleId, { keepWatching: true });
+    await invalidate(userId, titleId);
+};
+
 const setStatus = async (userId, mediaType, tmdbId, status) => {
     const titleId = await titleService.ensureTitle(mediaType, tmdbId);
 
@@ -294,6 +303,8 @@ const setTopFive = async (userId, items) => {
 };
 
 module.exports = {
+    invalidate,
+    markWatchedForTitle,
     getState,
     setStatus,
     clearStatus,

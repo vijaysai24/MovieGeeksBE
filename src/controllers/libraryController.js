@@ -2,14 +2,7 @@ const { matchedData } = require("express-validator");
 const service = require("../services/libraryService");
 const { parsePagination } = require("../utils/pagination");
 const { ok, created } = require("../utils/response");
-
-const handle = (fn) => async (req, res, next) => {
-    try {
-        await fn(req, res);
-    } catch (err) {
-        next(err);
-    }
-};
+const handle = require("../utils/handle");
 
 const input = (req) => matchedData(req);
 
@@ -118,7 +111,6 @@ const setTopFive = handle(async (req, res) => {
 });
 
 module.exports = {
-    handle,
     getState,
     setStatus,
     clearStatus,

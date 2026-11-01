@@ -2,6 +2,14 @@ const { body } = require("express-validator");
 
 const USERNAME_PATTERN = /^[a-z0-9_]{3,30}$/;
 
+// Names that would collide with routes such as /users/search or read as official accounts.
+const RESERVED_USERNAMES = new Set([
+    "admin", "administrator", "api", "getallusers", "me", "moderation", "moderator", "moviegeeks",
+    "search", "settings", "staff", "support", "system"
+]);
+
+const notReserved = (value) => !RESERVED_USERNAMES.has(value);
+
 const passwordRule = (field) => body(field)
     .isLength({ min: 8, max: 128 })
     .withMessage("Password must be 8-128 characters")
@@ -32,7 +40,10 @@ const registerValidation = [
         .trim()
         .toLowerCase()
         .matches(USERNAME_PATTERN)
-        .withMessage("Username must be 3-30 lowercase letters, numbers or underscores"),
+        .withMessage("Username must be 3-30 lowercase letters, numbers or underscores")
+        .bail()
+        .custom(notReserved)
+        .withMessage("That username is reserved"),
 
     passwordRule("password")
 
@@ -64,6 +75,8 @@ const changePasswordValidation = [
 
 module.exports = {
     USERNAME_PATTERN,
+    RESERVED_USERNAMES,
+    notReserved,
     registerValidation,
     loginValidation,
     changePasswordValidation

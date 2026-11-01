@@ -1,5 +1,5 @@
 const { body, query, param } = require("express-validator");
-const { USERNAME_PATTERN } = require("./authValidation");
+const { USERNAME_PATTERN, notReserved } = require("./authValidation");
 
 const getUsersValidation = [
 
@@ -47,7 +47,10 @@ const updateProfileValidation = [
         .trim()
         .toLowerCase()
         .matches(USERNAME_PATTERN)
-        .withMessage("Username must be 3-30 lowercase letters, numbers or underscores"),
+        .withMessage("Username must be 3-30 lowercase letters, numbers or underscores")
+        .bail()
+        .custom(notReserved)
+        .withMessage("That username is reserved"),
 
     // null and "" both clear the bio (null is coerced to "" here and stored as NULL).
     body("bio")

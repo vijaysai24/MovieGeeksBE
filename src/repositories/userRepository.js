@@ -93,6 +93,15 @@ const findActiveByUsername = async (username) => {
     return rows[0];
 };
 
+const findByUsername = async (username) => {
+    const [rows] = await db.execute("SELECT * FROM users WHERE username = ?", [username]);
+    return rows[0];
+};
+
+const setStatus = async (userId, status) => {
+    await db.execute("UPDATE users SET status = ? WHERE id = ?", [status, userId]);
+};
+
 const usernameTakenByOther = async (username, userId) => {
     const [rows] = await db.execute(
         "SELECT 1 FROM users WHERE username = ? AND id <> ?",
@@ -139,6 +148,8 @@ module.exports = {
     getUsersCount,
     findById,
     findActiveByUsername,
+    findByUsername,
+    setStatus,
     usernameTakenByOther,
     updateProfile,
     searchPublic
