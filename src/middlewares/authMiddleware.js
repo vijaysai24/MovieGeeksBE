@@ -9,14 +9,16 @@ const authMiddleware = (req, res, next) => {
         if (!authHeader) {
             return res.status(401).json({
                 success: false,
-                message: "Authorization header is missing"
+                message: "Authorization header is missing",
+                code: "UNAUTHORIZED"
             });
         }
 
         if (!authHeader.startsWith("Bearer ")) {
             return res.status(401).json({
                 success: false,
-                message: "Invalid authorization format"
+                message: "Invalid authorization format",
+                code: "UNAUTHORIZED"
             });
         }
 
@@ -30,9 +32,11 @@ const authMiddleware = (req, res, next) => {
 
     } catch (error) {
 
+        // TOKEN_EXPIRED tells the client to refresh and retry rather than sign the user out.
         return res.status(401).json({
             success: false,
-            message: "Invalid or expired token"
+            message: "Invalid or expired token",
+            code: error.name === "TokenExpiredError" ? "TOKEN_EXPIRED" : "INVALID_TOKEN"
         });
 
     }
