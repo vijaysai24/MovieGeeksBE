@@ -137,9 +137,16 @@ const LISTS = {
         mediaTypes: ["movie", "tv"],
         request: (mediaType, page, region) => ({ path: `/${mediaType}/popular`, params: { page, region } })
     },
+    // TMDB's own top_rated endpoint now ranks brand-new titles with a few hundred votes; a real
+    // vote floor keeps this list to films and series with a settled reputation.
     top_rated: {
         mediaTypes: ["movie", "tv"],
-        request: (mediaType, page) => ({ path: `/${mediaType}/top_rated`, params: { page } })
+        params: (mediaType) => ({
+            sort_by: "vote_average.desc",
+            "vote_count.gte": mediaType === "movie" ? 3000 : 1000,
+            ...(mediaType === "tv" && { without_genres: "10763,10764,10767,16" }),
+            include_adult: false
+        })
     },
     now_playing: {
         mediaTypes: ["movie"],
