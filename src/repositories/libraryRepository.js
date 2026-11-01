@@ -294,6 +294,37 @@ const replaceTopFive = async (userId, titleIds) => {
     }
 };
 
+// Random pick from what the member already means to watch: plan-to-watch plus wishlist.
+const randomFromQueue = async (userId, { mediaType, genreId }) => {
+    const params = [userId, userId];
+    let filter = "";
+    if (mediaType) {
+        filter += " AND t.media_type = ?";
+        params.push(mediaType);
+    }
+    if (genreId) {
+        filter += " AND EXISTS (SELECT 1 FROM title_genres tg WHERE tg.title_id = t.id AND tg.genre_id = ?)";
+        params.push(genreId);
+    }
+
+    const [rows] = await db.execute(
+        `SELECT ${TITLE_COLUMNS},
+            (SELECT COUNT(*) FROM titles q WHERE q.id IN (
+                SELECT title_id FROM watch_statuses WHERE user_id = ? AND status = 'PLAN_TO_WATCH'
+                UNION SELECT title_id FROM wishlist_items WHERE user_id = ?
+            )) AS queue_size
+         FROM titles t
+         WHERE t.id IN (
+            SELECT title_id FROM watch_statuses WHERE user_id = ? AND status = 'PLAN_TO_WATCH'
+            UNION SELECT title_id FROM wishlist_items WHERE user_id = ?
+         ) ${filter}
+         ORDER BY RAND()
+         LIMIT 1`,
+        [userId, userId, ...params]
+    );
+    return rows[0];
+};
+
 // Counts -------------------------------------------------------------------------------------
 
 const getCounts = async (userId) => {
@@ -337,5 +368,6 @@ module.exports = {
     diaryYears,
     getTopFive,
     replaceTopFive,
+    randomFromQueue,
     getCounts
 };

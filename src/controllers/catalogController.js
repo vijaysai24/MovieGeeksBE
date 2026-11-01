@@ -1,5 +1,6 @@
 const { matchedData } = require("express-validator");
 const service = require("../services/catalogService");
+const statsRepository = require("../repositories/statsRepository");
 const config = require("../config/env");
 const { ok } = require("../utils/response");
 
@@ -126,7 +127,10 @@ const getCalendar = async (req, res, next) => {
 const getRandom = async (req, res, next) => {
     try {
         const data = input(req);
-        ok(res, await service.getRandom(data.mediaType || "movie", discoverFilters(data), regionOf(data)));
+        const mediaType = data.mediaType || "movie";
+        const known = req.user ? await statsRepository.knownTitleRefs(req.user.id) : [];
+        const exclude = new Set(known.filter((row) => row.media_type === mediaType).map((row) => row.tmdb_id));
+        ok(res, await service.getRandom(mediaType, discoverFilters(data), regionOf(data), exclude));
     } catch (err) {
         next(err);
     }
